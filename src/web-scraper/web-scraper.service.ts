@@ -1,9 +1,15 @@
 import * as $ from 'cheerio';
 import * as _ from 'lodash';
 import got from 'got';
+import { FileSummary } from './summary.interface';
 
 function getRowName(i: number, elem: cheerio.Element) {
   return $('div[role="rowheader"] > span > a', elem).text();
+}
+
+interface DirectoryStructure {
+  directories: string[];
+  files: string[];
 }
 
 export class WebScraperService {
@@ -17,34 +23,36 @@ export class WebScraperService {
     }
   }
 
-  async summarizeRepository() {
-    const allFiles = await this.getAllFiles();
-    const promises = allFiles.map(file => this.getFileSummary(file));
-    return await Promise.all(promises);
+  async getRepositorySummary(): Promise<FileSummary[]> {
+    const files = await this.getAllFiles();
+    return _.flatMapDeep(files);
   }
 
-  private async getAllFiles(dir = '') {
+  private async getAllFiles(
+    dir = '',
+  ): Promise<(FileSummary | FileSummary[])[]> {
     const path = dir === '' ? '' : `tree/${this.branch}/${dir}`;
     const url = `https://github.com/${this.user}/${this.repository}/${path}`;
     const html = await got(url);
 
-    const result = this.getFilesInFolder(html.body);
-    result.files = result.files.map(f => `${dir}/${f}`.slice(1));
+    const directory = this.getDirectoryStructure(html.body);
 
-    if (result.directories.length) {
-      const promises = result.directories.map(p =>
+    const fileSummaries$ = directory.files.map(f =>
+      this.getFileSummary(`${dir}/${f}`.slice(1)),
+    );
+
+    if (directory.directories.length) {
+      const dirSummaries$ = directory.directories.map(p =>
         this.getAllFiles(`${dir}/${p}`),
       );
 
-      const subfiles: string[][] = await Promise.all(promises);
-      const normalized = _.flatMap(subfiles, _.identity);
-      return [...normalized, ...result.files];
+      return await Promise.all([...dirSummaries$, ...fileSummaries$] as any);
     }
 
-    return result.files;
+    return await Promise.all(fileSummaries$);
   }
 
-  private getFilesInFolder(html: string) {
+  private getDirectoryStructure(html: string): DirectoryStructure {
     const rows = $(
       'div[role="grid"][aria-labelledby="files"] > div.Box-row',
       html,
@@ -64,7 +72,7 @@ export class WebScraperService {
     };
   }
 
-  private async getFileSummary(file: string) {
+  private async getFileSummary(file: string): Promise<FileSummary> {
     const url = `https://github.com/${this.user}/${this.repository}/blob/${this.branch}/${file}`;
     const html = await got(url);
 
