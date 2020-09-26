@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { WebScraperService } from './github-scraper.service';
+import { GithubScraper } from './github-scraper';
 
-describe('WebScraperService', () => {
-  let service: WebScraperService;
+describe('GithubScraper', () => {
+  let service: GithubScraper;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [WebScraperService],
+      providers: [],
     }).compile();
 
-    service = module.get<WebScraperService>(WebScraperService);
+    service = module.get<GithubScraper>(GithubScraper);
   });
 
   it('should be defined', () => {

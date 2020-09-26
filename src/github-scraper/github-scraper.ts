@@ -14,21 +14,12 @@ interface DirectoryStructure {
   files: string[];
 }
 
-export class WebScraperService {
-  constructor(
+export class GithubScraper {
+  private constructor(
     protected user: string,
     protected repository: string,
-    protected branch?: string,
-  ) {
-    if (!this.branch) {
-      this.branch = 'master';
-    }
-  }
-
-  async getRepositorySummary(): Promise<FileSummary[]> {
-    const files = await this.getAllFiles();
-    return _.flatMapDeep(files);
-  }
+    protected branch: string,
+  ) {}
 
   private async getAllFiles(
     dir = '',
@@ -87,5 +78,15 @@ export class WebScraperService {
       size: filesizeParser(sizeMatch[0]),
       lines: _.isNaN(Number(linesMatch[1])) ? null : Number(linesMatch[1]),
     };
+  }
+
+  static async getRepositorySummary(
+    user: string,
+    repository: string,
+    branch: string,
+  ): Promise<FileSummary[]> {
+    const instance = new GithubScraper(user, repository, branch);
+    const files = await instance.getAllFiles();
+    return _.flatMapDeep(files);
   }
 }

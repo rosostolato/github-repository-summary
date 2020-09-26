@@ -1,4 +1,4 @@
-export interface Summary {
+interface Summary {
   /** size in bytes */
   size: number;
   /** number of lines. Null if it's not applicable */
@@ -6,9 +6,11 @@ export interface Summary {
 }
 
 export interface FileSummary extends Summary {
+  /** file name */
   file: string;
 }
 
 export interface ExtensionSummary extends Summary {
+  /** extension name */
   extension: string;
 }
