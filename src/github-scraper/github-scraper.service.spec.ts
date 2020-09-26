@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { WebScraperService } from './web-scraper.service';
+import { WebScraperService } from './github-scraper.service';
 
 describe('WebScraperService', () => {
   let service: WebScraperService;

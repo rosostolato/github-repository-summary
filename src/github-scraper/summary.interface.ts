@@ -1,6 +1,8 @@
 export interface Summary {
-  size: string;
-  lines: number | string;
+  /** size in bytes */
+  size: number;
+  /** number of lines. Null if it's not applicable */
+  lines: number | null;
 }
 
 export interface FileSummary extends Summary {

@@ -1,6 +1,8 @@
-import * as $ from 'cheerio';
-import * as _ from 'lodash';
+import filesizeParser from 'filesize-parser';
+import $ from 'cheerio';
+import _ from 'lodash';
 import got from 'got';
+
 import { FileSummary } from './summary.interface';
 
 function getRowName(i: number, elem: cheerio.Element) {
@@ -37,19 +39,15 @@ export class WebScraperService {
 
     const directory = this.getDirectoryStructure(html.body);
 
-    const fileSummaries$ = directory.files.map(f =>
-      this.getFileSummary(`${dir}/${f}`.slice(1)),
+    const dirSummaries$ = directory.directories.map(p =>
+      this.getAllFiles(`${dir}/${p}`),
     );
 
-    if (directory.directories.length) {
-      const dirSummaries$ = directory.directories.map(p =>
-        this.getAllFiles(`${dir}/${p}`),
-      );
+    const fileSummaries$ = directory.files.map(p =>
+      this.getFileSummary(`${dir}/${p}`.slice(1)),
+    );
 
-      return await Promise.all([...dirSummaries$, ...fileSummaries$] as any);
-    }
-
-    return await Promise.all(fileSummaries$);
+    return await Promise.all([...dirSummaries$, ...fileSummaries$] as any);
   }
 
   private getDirectoryStructure(html: string): DirectoryStructure {
@@ -86,8 +84,8 @@ export class WebScraperService {
 
     return {
       file,
-      size: sizeMatch[0] || 'not specified',
-      lines: Number(linesMatch[1] || 0) || 'not specified',
+      size: filesizeParser(sizeMatch[0]),
+      lines: _.isNaN(Number(linesMatch[1])) ? null : Number(linesMatch[1]),
     };
   }
 }
