@@ -10,17 +10,17 @@ import { GithubScraper } from './github-scraper/github-scraper';
 @Controller()
 export class AppController {
   /**
-   *
+   * Get github repository summary
    * @param user repository owner
    * @param repository repository name
-   * @param grouped should group by extension @default true
+   * @param groupBy should group by extension @default 'extension'
    * @param branch repository branch @default 'master'
    */
   @Get(':user/:repository')
   async getSummary(
     @Param('user') user: string,
     @Param('repository') repository: string,
-    @Query('grouped') grouped = true,
+    @Query('groupBy') groupBy = 'extension',
     @Query('branch') branch = 'master',
   ): Promise<(FileSummary | ExtensionSummary)[]> {
     const files = await GithubScraper.getRepositorySummary(
@@ -30,7 +30,7 @@ export class AppController {
     );
 
     // returns grouped by extension by default
-    if (grouped) {
+    if (groupBy === 'extension') {
       return _(files)
         .groupBy(x => {
           const match = /.*\.(.*)/.exec(x.file);

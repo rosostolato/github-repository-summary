@@ -5,10 +5,6 @@ import got from 'got';
 
 import { FileSummary } from './summary.interface';
 
-function getRowName(i: number, elem: cheerio.Element) {
-  return $('div[role="rowheader"] > span > a', elem).text();
-}
-
 interface DirectoryStructure {
   directories: string[];
   files: string[];
@@ -47,13 +43,14 @@ export class GithubScraper {
       html,
     );
 
-    const directories = rows.filter(
-      (i, row) => $('svg[aria-label="Directory"]', row).length > 0,
-    );
+    const filterByType = (type: string) => (i: number, elem: cheerio.Element) =>
+      $(`svg[aria-label="${type}"]`, elem).length > 0;
 
-    const files = rows.filter(
-      (i, row) => $('svg[aria-label="File"]', row).length > 0,
-    );
+    const directories = rows.filter(filterByType('Directory'));
+    const files = rows.filter(filterByType('File'));
+
+    const getRowName = (i: number, elem: cheerio.Element) =>
+      $('div[role="rowheader"] > span > a', elem).text();
 
     return {
       directories: directories.map(getRowName).get() as string[],
