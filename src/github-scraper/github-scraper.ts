@@ -12,9 +12,9 @@ interface DirectoryStructure {
 
 export class GithubScraper {
   private constructor(
-    protected user: string,
-    protected repository: string,
-    protected branch: string,
+    private user: string,
+    private repository: string,
+    private branch: string,
   ) {}
 
   private async getAllFiles(

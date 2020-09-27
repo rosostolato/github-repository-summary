@@ -1,18 +1,51 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Response } from 'got';
 import { GithubScraper } from './github-scraper';
 
+import repoRoot from './mocks/root.mock';
+import repoReadme from './mocks/Readme.mock';
+import repoOpml from './mocks/Opml.mock';
+
+jest.mock('got', () => ({
+  __esModule: true, // this property makes it work
+  async default(url: string) {
+    switch (url) {
+      case 'https://github.com/user/repository/':
+        return {
+          body: repoRoot,
+        } as Response<string>;
+
+      case 'https://github.com/user/repository/blob/branch/README':
+        return {
+          body: repoReadme,
+        } as Response<string>;
+
+      case 'https://github.com/user/repository/blob/branch/opml.php':
+        return {
+          body: repoOpml,
+        } as Response<string>;
+    }
+  },
+}));
+
 describe('GithubScraper', () => {
-  let service: GithubScraper;
+  it('should get repository summary', async () => {
+    const files = await GithubScraper.getRepositorySummary(
+      'user',
+      'repository',
+      'branch',
+    );
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [],
-    }).compile();
-
-    service = module.get<GithubScraper>(GithubScraper);
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(files).toEqual([
+      {
+        file: 'README',
+        lines: 1,
+        size: 57,
+      },
+      {
+        file: 'opml.php',
+        lines: 39,
+        size: 747,
+      },
+    ]);
   });
 });
