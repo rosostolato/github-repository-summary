@@ -2,6 +2,8 @@ import { Response } from 'got';
 import { GithubScraper } from './github-scraper';
 
 import repoRoot from './mocks/root.mock';
+import repoSrc from './mocks/src.mock';
+import repoIndex from './mocks/index.mock';
 import repoReadme from './mocks/Readme.mock';
 import repoOpml from './mocks/Opml.mock';
 
@@ -12,6 +14,16 @@ jest.mock('got', () => ({
       case 'https://github.com/user/repository/':
         return {
           body: repoRoot,
+        } as Response<string>;
+
+      case 'https://github.com/user/repository/tree/branch//src':
+        return {
+          body: repoSrc,
+        } as Response<string>;
+
+      case 'https://github.com/user/repository/blob/branch/src/index.js':
+        return {
+          body: repoIndex,
         } as Response<string>;
 
       case 'https://github.com/user/repository/blob/branch/README':
@@ -36,6 +48,11 @@ describe('GithubScraper', () => {
     );
 
     expect(files).toEqual([
+      {
+        file: 'src/index.js',
+        lines: 580,
+        size: 295936,
+      },
       {
         file: 'README',
         lines: 1,
