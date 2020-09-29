@@ -1,6 +1,6 @@
 import https from 'https';
 import { Observable, of } from 'rxjs';
-import { retryWhen, delay, tap, switchMap } from 'rxjs/operators';
+import { retryWhen, delay, tap, switchMap, take } from 'rxjs/operators';
 import _ from 'lodash';
 
 const agent = new https.Agent({
@@ -12,8 +12,6 @@ export default class LimitRequest {
   private counter = 0;
 
   get(url: string) {
-    let numOfTries = 0;
-
     const request = new Observable<string>(subscriber => {
       https
         .get(url, { agent }, res => {
@@ -42,15 +40,12 @@ export default class LimitRequest {
         switchMap(() => request),
         retryWhen(errors =>
           errors.pipe(
-            tap(err => {
-              if (++numOfTries > 3) {
-                throw err;
-              }
-
+            tap(() => {
               console.log('Too many requests. Retrying after a minute...');
             }),
             delay(_.random(60, 120) * 1000),
             tap(() => console.log('Trying again...')),
+            take(3),
           ),
         ),
       )
