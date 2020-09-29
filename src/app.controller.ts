@@ -1,4 +1,11 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  Query,
+} from '@nestjs/common';
 import _ from 'lodash';
 
 import {
@@ -23,31 +30,38 @@ export class AppController {
     @Query('groupBy') groupBy = 'extension',
     @Query('branch') branch = 'master',
   ): Promise<(FileSummary | ExtensionSummary)[]> {
-    const files = await GithubScraper.getRepositorySummary(
-      user,
-      repository,
-      branch,
-    );
+    try {
+      const files = await GithubScraper.getRepositorySummary(
+        user,
+        repository,
+        branch,
+      );
 
-    // returns grouped by extension by default
-    if (groupBy === 'extension') {
-      return _(files)
-        .groupBy(x => {
-          const match = /.*\.(.*)/.exec(x.file);
-          return match?.[1] || 'others';
-        })
-        .map(
-          (v, k) =>
-            ({
-              extension: k,
-              lines: _.sumBy(v, 'lines'),
-              size: _.sumBy(v, 'size'),
-            } as ExtensionSummary),
-        )
-        .value();
+      // returns grouped by extension by default
+      if (groupBy === 'extension') {
+        return _(files)
+          .groupBy(x => {
+            const match = /.*\.(.*)/.exec(x.file);
+            return match?.[1] || 'others';
+          })
+          .map(
+            (v, k) =>
+              ({
+                extension: k,
+                lines: _.sumBy(v, 'lines'),
+                size: _.sumBy(v, 'size'),
+              } as ExtensionSummary),
+          )
+          .value();
+      }
+
+      // else return individual files
+      return files;
+    } catch (error) {
+      throw new HttpException(
+        'Could not process. Please try again later.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
-
-    // else return individual files
-    return files;
   }
 }

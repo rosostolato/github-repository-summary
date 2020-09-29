@@ -12,6 +12,8 @@ export default class LimitRequest {
   private counter = 0;
 
   get(url: string) {
+    let numOfTries = 0;
+
     const request = new Observable<string>(subscriber => {
       https
         .get(url, { agent }, res => {
@@ -40,9 +42,13 @@ export default class LimitRequest {
         switchMap(() => request),
         retryWhen(errors =>
           errors.pipe(
-            tap(() =>
-              console.log('Too many requests. Retrying after a minute...'),
-            ),
+            tap(err => {
+              if (++numOfTries > 3) {
+                throw err;
+              }
+
+              console.log('Too many requests. Retrying after a minute...');
+            }),
             delay(_.random(60, 120) * 1000),
             tap(() => console.log('Trying again...')),
           ),
