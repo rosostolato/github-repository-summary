@@ -5,7 +5,7 @@ import _ from 'lodash';
 
 const agent = new https.Agent({
   keepAlive: true,
-  maxSockets: 10,
+  maxSockets: 100,
 });
 
 export default class LimitRequest {
