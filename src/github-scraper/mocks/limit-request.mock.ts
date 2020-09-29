@@ -2,8 +2,8 @@
 import repoRoot from './root.mock';
 import repoSrc from './src.mock';
 import repoIndex from './index.mock';
-import repoReadme from './Readme.mock';
-import repoOpml from './Opml.mock';
+import repoReadme from './readme.mock';
+import repoOpml from './opml.mock';
 
 export default {
   async get(url: string) {
