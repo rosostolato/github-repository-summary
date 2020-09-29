@@ -1,8 +1,8 @@
 import filesizeParser from 'filesize-parser';
 import $ from 'cheerio';
 import _ from 'lodash';
-import got from 'got';
 
+import LimitRequest from './limit-request';
 import { FileSummary } from './summary.interface';
 
 interface DirectoryStructure {
@@ -17,14 +17,16 @@ export class GithubScraper {
     private branch: string,
   ) {}
 
+  private http = new LimitRequest();
+
   private async getAllFiles(
     dir = '',
   ): Promise<(FileSummary | FileSummary[])[]> {
     const path = dir === '' ? '' : `tree/${this.branch}/${dir}`;
     const url = `https://github.com/${this.user}/${this.repository}/${path}`;
-    const html = await got(url);
+    const html = await this.http.get(url);
 
-    const directory = this.getDirectoryStructure(html.body);
+    const directory = this.getDirectoryStructure(html);
 
     const dirSummaries$ = directory.directories.map(p =>
       this.getAllFiles(`${dir}/${p}`),
@@ -60,11 +62,11 @@ export class GithubScraper {
 
   private async getFileSummary(file: string): Promise<FileSummary> {
     const url = `https://github.com/${this.user}/${this.repository}/blob/${this.branch}/${file}`;
-    const html = await got(url);
+    const html = await this.http.get(url);
 
     const text = $(
       '.repository-content > .Box.mt-3 > .Box-header > .text-mono',
-      html.body,
+      html,
     ).text();
 
     const sizeMatch = /[.0-9]+ (KB|MB|GB|TB|Bytes)/.exec(text) || [];
