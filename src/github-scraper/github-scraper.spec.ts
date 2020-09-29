@@ -1,6 +1,7 @@
-import { Response } from 'got';
 import { GithubScraper } from './github-scraper';
 
+// mock responses
+import { Response } from 'got';
 import repoRoot from './mocks/root.mock';
 import repoSrc from './mocks/src.mock';
 import repoIndex from './mocks/index.mock';
